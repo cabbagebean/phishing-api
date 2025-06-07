@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+import os
 import joblib
-from phishing_utils import extract_features  # Import your feature extraction logic
+import gdown
+from phishing_utils import extract_features  # Your custom feature extraction
 
-# Define the structure of the incoming request
+# Define the structure of incoming data
 class EmailData(BaseModel):
     email_text: str
     sender_address: str
@@ -15,15 +17,35 @@ app = FastAPI(
     version="1.0"
 )
 
-# Load the trained model once at startup
+# === Model loading configuration ===
+MODEL_DIR = "model"
+MODEL_FILENAME = "phishing_detection_random_tuned.joblib"
+MODEL_PATH = os.path.join(MODEL_DIR, MODEL_FILENAME)
+
+# Google Drive File ID (not the full link)
+GOOGLE_DRIVE_FILE_ID = "11XflKMHrTRMpj7_e3PEWIwS6FLsaupOd"
+
+# Use gdown to download the model if not already present
+def download_model_from_drive(file_id: str, destination_path: str):
+    print("📥 Downloading model using gdown...")
+    url = f"https://drive.google.com/uc?id={file_id}"
+    gdown.download(url, destination_path, quiet=False)
+    print("✅ Model downloaded successfully.")
+
+# Ensure the model folder exists
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+# Try to download and load the model
 try:
-    model = joblib.load("phishing_detection_random_tuned.joblib")
+    if not os.path.exists(MODEL_PATH):
+        download_model_from_drive(GOOGLE_DRIVE_FILE_ID, MODEL_PATH)
+    model = joblib.load(MODEL_PATH)
     print("✅ Model loaded successfully.")
 except Exception as e:
     print(f"❌ Error loading model: {e}")
     model = None
 
-# Root endpoint for testing
+# Root endpoint
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Phishing Detection API."}
@@ -35,10 +57,10 @@ def predict(data: EmailData):
         return {"error": "Model not loaded. Check server logs."}
 
     try:
-        # Extract features from incoming email content
+        # Extract features from the incoming email
         features = extract_features(data.email_text, data.sender_address)
 
-        # Get prediction
+        # Generate prediction
         prediction = model.predict([features])[0]
         label = "phishing" if prediction == 1 else "legit"
 
