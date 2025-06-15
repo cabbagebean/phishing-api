@@ -23,7 +23,7 @@ MODEL_FILENAME = "phishing_detection_random_tuned.joblib"
 MODEL_PATH = os.path.join(MODEL_DIR, MODEL_FILENAME)
 
 # Google Drive File ID (not the full link)
-GOOGLE_DRIVE_FILE_ID = "11XflKMHrTRMpj7_e3PEWIwS6FLsaupOd"
+GOOGLE_DRIVE_FILE_ID = "1UbPPC3XoxMuOeHp0Rfa4QVCNJL0FUpr-"
 
 # Use gdown to download the model if not already present
 def download_model_from_drive(file_id: str, destination_path: str):
