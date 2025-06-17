@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import os
 import joblib
 import gdown
+import numpy as np
 from phishing_utils import extract_features  # Your custom feature extraction
 
 # Define the structure of incoming data
@@ -61,7 +62,7 @@ def predict(data: EmailData):
         features = extract_features(data.email_text, data.sender_address)
 
         # Generate prediction
-        prediction = model.predict([features])[0]
+        prediction = model.predict(np.array(features).reshape(1, -1))[0]
         label = "phishing" if prediction == 1 else "legit"
 
         return {"prediction": label}
