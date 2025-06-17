@@ -20,7 +20,6 @@ phishing_keywords = [
 # Define common free email domains
 free_email_domains = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "aol.com"]
 
-# === FEATURE EXTRACTION FUNCTION ===
 def extract_features(email_text: str, sender_address: str):
     # Clean and lowercase text
     text = email_text.lower()
@@ -30,25 +29,40 @@ def extract_features(email_text: str, sender_address: str):
     sender_length = len(sender)
     log_sender_length = np.log1p(sender_length)
 
-    # Feature 2: Sentiment score of the email content
+    # Feature 2: Sentiment score
     sentiment_score = sia.polarity_scores(text)["compound"]
 
     # Feature 3: Count of phishing keywords
     keyword_count = sum(1 for word in phishing_keywords if word in text)
-    
-    # Feature 4: Binary flag - does it contain phishing keywords
+
+    # Feature 4: Binary - contains phishing keywords
     contains_keywords = int(keyword_count > 0)
 
-    # Feature 5: Binary flag - is sender from free email provider
+    # Feature 5: Binary - is sender from free email domain
     is_free_email = int(any(domain in sender for domain in free_email_domains))
 
-    # === Final feature vector ===
-    features = [
-        log_sender_length,       # numeric
-        sentiment_score,         # numeric
-        keyword_count,           # numeric
-        contains_keywords,       # binary
-        is_free_email            # binary
-    ]
+    # Feature 6: Binary - is disposable email domain
+    disposable_domains = ["mailinator.com", "10minutemail.com", "trashmail.com"]
+    is_disposable_email = int(any(domain in sender for domain in disposable_domains))
 
-    return features
+    # Feature 7: Binary - suspicious characters in sender
+    has_suspicious_chars = int(bool(re.search(r"[!$%^*#~]", sender)))
+
+    # Feature 8: Binary - contains URL
+    has_url = int("http" in text or "www." in text or ".com" in text)
+
+    # Feature 9: Interaction feature
+    url_x_keyword = keyword_count * has_url
+
+    # Return as dictionary — must match training data column names
+    return {
+        "email_text": email_text,
+        "Log_Sender_Length": log_sender_length,
+        "Sentiment_Score": sentiment_score,
+        "Phishing_Keyword_Count": keyword_count,
+        "Contains_Phish_Keywords": contains_keywords,
+        "Is_Free_Email": is_free_email,
+        "Is_Disposable_Email": is_disposable_email,
+        "Has_Suspicious_Chars": has_suspicious_chars,
+        "URL_x_Keyword": url_x_keyword
+    }
