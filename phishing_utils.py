@@ -54,15 +54,15 @@ def extract_features(email_text: str, sender_address: str):
     # Feature 9: Interaction feature
     url_x_keyword = keyword_count * has_url
 
-    # Return as dictionary — must match training data column names
-    return {
-        "email_text": email_text,
-        "Log_Sender_Length": log_sender_length,
-        "Sentiment_Score": sentiment_score,
-        "Phishing_Keyword_Count": keyword_count,
-        "Contains_Phish_Keywords": contains_keywords,
-        "Is_Free_Email": is_free_email,
-        "Is_Disposable_Email": is_disposable_email,
-        "Has_Suspicious_Chars": has_suspicious_chars,
-        "URL_x_Keyword": url_x_keyword
-    }
+    # Return as list in the exact order used during model training
+    return [
+        email_text,              # This is passed to the TfidfVectorizer
+        log_sender_length,
+        sentiment_score,
+        keyword_count,
+        contains_keywords,
+        is_free_email,
+        is_disposable_email,
+        has_suspicious_chars,
+        url_x_keyword
+    ]
