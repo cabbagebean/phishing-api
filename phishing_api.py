@@ -4,8 +4,7 @@ import os
 import joblib
 import pandas as pd
 import gdown
-import numpy as np
-from phishing_utils import extract_features  # Your custom feature extraction
+from phishing_utils import extract_features
 
 # Define the structure of incoming data
 class EmailData(BaseModel):
@@ -24,7 +23,6 @@ MODEL_DIR = "model"
 MODEL_FILENAME = "phishing_detection_random_tuned.joblib"
 MODEL_PATH = os.path.join(MODEL_DIR, MODEL_FILENAME)
 
-# Google Drive File ID
 GOOGLE_DRIVE_FILE_ID = "1UbPPC3XoxMuOeHp0Rfa4QVCNJL0FUpr-"
 
 def download_model_from_drive(file_id: str, destination_path: str):
@@ -33,7 +31,6 @@ def download_model_from_drive(file_id: str, destination_path: str):
     gdown.download(url, destination_path, quiet=False)
     print("✅ Model downloaded successfully.")
 
-# Ensure model directory exists
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 # Load the model
@@ -58,13 +55,13 @@ def predict(data: EmailData):
         return {"error": "Model not loaded. Check server logs."}
 
     try:
-        # Extract features from the incoming email
         features = extract_features(data.email_text, data.sender_address)
+        if features is None:
+            return {"error": "Feature extraction failed."}
 
-        # Convert to DataFrame to preserve column names
+        # Input must be a DataFrame with matching column names
         input_df = pd.DataFrame([features])
 
-        # Generate prediction
         prediction = model.predict(input_df)[0]
         label = "phishing" if prediction == 1 else "legit"
 
